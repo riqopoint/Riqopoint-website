@@ -1,19 +1,76 @@
-import {NextResponse} from "next/server";
-export const runtime="nodejs";
-const hits=new Map<string,number[]>();
-export async function POST(req:Request){
-const fd=await req.formData();
-if(String(fd.get("website")||""))return NextResponse.json({ok:true});
-const ip=req.headers.get("x-forwarded-for")?.split(",")[0]||"x";const now=Date.now();
-const rec=(hits.get(ip)||[]).filter(t=>now-t<600000);if(rec.length>=5)return NextResponse.json({error:"Too many enquiries. Please try later."},{status:429});
-hits.set(ip,[...rec,now]);
-const g=(k:string)=>String(fd.get(k)||"").trim();
-const d={name:g("name"),org:g("org"),email:g("email"),industry:g("industry"),type:g("type"),capability:g("capability"),message:g("message")};
-if(!d.name||!d.org||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)||!d.industry||!d.type||d.message.length<20)
-return NextResponse.json({error:"Please complete all fields with a valid email and a description of at least 20 characters."},{status:400});
-const {RESEND_API_KEY:k,ENQUIRY_TO_EMAIL:to,ENQUIRY_FROM_EMAIL:from}=process.env;
-if(!k||!to||!from)return NextResponse.json({error:"Enquiry delivery is not configured yet. Please email us directly."},{status:503});
-const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${k}`,"Content-Type":"application/json"},
-body:JSON.stringify({from,to:[to],reply_to:d.email,subject:`RIQOPOINT enquiry: ${d.org} (${d.type})`,text:Object.entries(d).map(([a,b])=>`${a}: ${b}`).join("\n")})});
-if(!r.ok)return NextResponse.json({error:"Could not send your enquiry. Please try again or email us."},{status:502});
-return NextResponse.json({ok:true});}
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+function clean(value: unknown, maxLength: number): string {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    // Quietly accept honeypot submissions without sending email.
+    if (clean(body.website, 200)) {
+      return NextResponse.json({ ok: true });
+    }
+
+    const name = clean(body.name, 100);
+    const organisation = clean(body.organisation, 150);
+    const email = clean(body.email, 254);
+    const industry = clean(body.industry, 120);
+    const topic = clean(body.topic, 150);
+    const message = clean(body.message, 6000);
+
+    if (!name || !email || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Please provide a valid name, email and challenge description." }, { status: 400 });
+    }
+
+    const apiKey = process.env.RESEND_API_KEY;
+    const recipient = process.env.RIQOPOINT_TO_EMAIL || "friendsclubyr@gmail.com";
+    const sender = process.env.RIQOPOINT_FROM_EMAIL;
+
+    if (!apiKey || !sender) {
+      console.error("Enquiry email is not configured: RESEND_API_KEY or RIQOPOINT_FROM_EMAIL is missing.");
+      return NextResponse.json({ error: "The enquiry service is not configured yet." }, { status: 503 });
+    }
+
+    const emailText = [
+      "A new project enquiry was submitted through the RIQOPOINT website.",
+      "",
+      `Name: ${name}`,
+      `Organisation: ${organisation || "Not provided"}`,
+      `Email: ${email}`,
+      `Industry: ${industry || "Not specified"}`,
+      `Area of interest: ${topic || "Not specified"}`,
+      "",
+      "Challenge:",
+      message
+    ].join("\n");
+
+    const resendResponse = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: sender,
+        to: [recipient],
+        reply_to: email,
+        subject: `RIQOPOINT website enquiry — ${name}`,
+        text: emailText
+      })
+    });
+
+    if (!resendResponse.ok) {
+      const detail = await resendResponse.text();
+      console.error("Resend API error:", detail);
+      return NextResponse.json({ error: "Email delivery failed." }, { status: 502 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Enquiry endpoint error:", error);
+    return NextResponse.json({ error: "Unable to process enquiry." }, { status: 500 });
+  }
+}
