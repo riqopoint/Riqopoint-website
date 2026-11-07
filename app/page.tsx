@@ -39,16 +39,21 @@ return(<>
 <p>You deal with one team. We define the scope, coordinate the people and facilities, check the technical quality and deliver one report. External parties are engaged only through appropriate permissions and agreements.</p>
 <p className="note">Growth path: build credibility with delivered projects, widen the specialist network, then add in-house capability where it is commercially justified.</p></div></div></section>
 <section id="cases" className="sec tint"><h2>Selected project experience</h2>
-<p className="sub case-intro">Examples of technical work that has shaped our approach. These are prior individual experiences of the founders, not projects delivered by RIQOPOINT.</p>
+<p className="sub case-intro">Selected technical investigations and research experience that inform how we approach complex engineering challenges.</p>
 <article className="case-card">
 <div className="case-kicker">Industrial consulting experience · Pipe failure investigation</div>
 <h3>Investigating the cause of an industrial pipe failure</h3>
 <p>A pipe failure investigation undertaken through prior consulting experience with an industrial pipe manufacturer. The work used material characterisation and scientific analysis to examine the failed material and investigate the underlying technical cause.</p>
 <div className="case-meta"><span>Failure investigation</span><span>Material characterisation</span><span>Evidence-led analysis</span></div>
-<p className="case-note">Client-specific findings and conclusions are not published here. The experience is presented as prior individual work and should not be interpreted as a RIQOPOINT client engagement.</p>
 <a className="link" href="#contact">Discuss a similar challenge</a>
 </article>
-<p className="case-permission">Further project examples will be added when the scope, outcomes and permission to publish have been verified.</p>
+<article className="case-card">
+<div className="case-kicker">Research experience · Aluminium anode development</div>
+<h3>Linking microstructure with aluminium anode electrochemical performance</h3>
+<p>Research examining how the microstructural characteristics of aluminium anodes relate to their electrochemical performance. The work connects materials characterisation with electrochemical evaluation to understand how material structure influences anode behaviour and performance.</p>
+<div className="case-meta"><span>Microstructural analysis</span><span>Electrochemical evaluation</span><span>Structure–performance relationship</span></div>
+<a className="link" href="#contact">Discuss a related R&amp;D challenge</a>
+</article>
 </section>
 <section id="contact" className="sec dark contact"><div><h2>Discuss your challenge</h2>
 <p className="sub">Request an initial assessment, enquire about an investigation or explore an R&amp;D collaboration.</p>
